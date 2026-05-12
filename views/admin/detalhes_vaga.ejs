@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Candidatos da Vaga - W-Code</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 30px 16px; box-sizing: border-box; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .candidato-card { border: 1px solid #eee; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #007bff; }
+        .btn-voltar { display: inline-block; margin-bottom: 20px; text-decoration: none; color: #666; }
+        .resumo { background: #f9f9f9; padding: 10px; border-radius: 5px; font-style: italic; color: #444; }
+        h1 { font-size: 1.4rem; word-break: break-word; }
+        @media (max-width: 600px) {
+            .container { padding: 16px; }
+            .candidato-card { padding: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/dashboard_admin" class="btn-voltar">⬅ Voltar ao Painel</a>
+        <h1>Vaga: <%= vaga.titulo %></h1>
+        <p>Empresa Responsável: <strong><%= vaga.empresa.nome %></strong></p>
+        <hr>
+        
+        <h3>Candidatos Inscritos (<%= vaga.candidatos.length %>)</h3>
+        <% if(vaga.candidatos.length === 0) { %>
+            <p>Nenhuma candidatura para esta vaga até o momento.</p>
+        <% } %>
+
+        <% vaga.candidatos.forEach(c => { %>
+            <div class="candidato-card">
+                <h4><%= c.nome %></h4>
+                <p>📧 <%= c.email %> | 📞 <%= c.telefone || 'Sem telefone' %></p>
+                <% if(c.resumo) { %>
+                    <p><strong>Resumo Profissional:</strong></p>
+                    <div class="resumo"><%= c.resumo %></div>
+                <% } %>
+                <p><small>CPF: <%= c.cpf %></small></p>
+            </div>
+        <% }) %>
+    </div>
+</body>
+</html>

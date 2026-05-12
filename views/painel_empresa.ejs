@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Painel da Empresa - W-Code</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 10px; }
+        h1 { margin: 0; color: #333; font-size: 1.5rem; }
+        .btn-sair { color: #dc3545; text-decoration: none; font-weight: bold; border: 1px solid #dc3545; padding: 5px 15px; border-radius: 5px; transition: 0.2s; white-space: nowrap; }
+        .btn-sair:hover { background: #dc3545; color: white; }
+
+        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        h3 { margin-top: 0; color: #007bff; border-bottom: 2px solid #f0f2f5; padding-bottom: 15px; margin-bottom: 20px; }
+
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
+        textarea { resize: vertical; }
+        .btn-publicar { background: #28a745; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; width: 100%; }
+        .btn-publicar:hover { background: #218838; }
+
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 480px; }
+        th, td { padding: 15px; border-bottom: 1px solid #eee; text-align: left; vertical-align: middle; }
+        th { background: #f8f9fa; color: #555; font-weight: 600; }
+        tr:hover { background: #fcfcfc; }
+
+        .badge { background: #e2e6ea; color: #495057; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+        .badge-active { background: #d1e7dd; color: #0f5132; }
+        .badge-preenchida { background: #fff3cd; color: #856404; }
+
+        .btn-ver { background: #007bff; color: white; text-decoration: none; padding: 8px 15px; border-radius: 5px; font-size: 0.9rem; font-weight: bold; transition: 0.2s; white-space: nowrap; }
+        .btn-ver:hover { background: #0056b3; }
+
+        .btn-preencher { background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .btn-preencher:hover { background: #218838; }
+
+        .btn-excluir { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .btn-excluir:hover { background: #b02a37; }
+
+        .acoes-vaga { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .status-aguardando { color: #999; font-style: italic; font-size: 0.9rem; }
+
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .card { padding: 18px; }
+            h1 { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="header">
+            <h1>Olá, <%= usuario.nome %>!</h1>
+            <a href="/logout" class="btn-sair">Sair</a>
+        </div>
+
+        <div class="card">
+            <h3>📢 Publicar Nova Vaga</h3>
+            <form action="/salvar_vaga" method="POST">
+                <input type="text" name="titulo" placeholder="Título da Vaga (ex: Desenvolvedor Jr)" required>
+                <input type="text" name="salario" placeholder="Salário (ex: R$ 3.000,00 ou A Combinar)">
+                <textarea name="descricao" rows="3" placeholder="Descrição das atividades..." required></textarea>
+                <textarea name="requisitos" rows="2" placeholder="Requisitos (ex: Excel, Inglês...)"></textarea>
+                
+                <button type="submit" class="btn-publicar">Publicar Vaga</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Minhas Vagas</h3>
+            <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Título</th>
+                        <th style="width: 20%;">Candidatos</th>
+                        <th style="width: 15%;">Status</th>
+                        <th style="width: 30%;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (vagas.length === 0) { %>
+                        <tr><td colspan="4" style="text-align: center; color: #888; padding: 30px;">Nenhuma vaga publicada ainda.</td></tr>
+                    <% } else { %>
+                        <% vagas.forEach(vaga => { %>
+                            <tr>
+                                <td>
+                                    <strong><%= vaga.titulo %></strong>
+                                    <div style="font-size: 0.85rem; color: #777; margin-top: 4px;">Salário: <%= vaga.salario || 'A combinar' %></div>
+                                </td>
+                                <td>
+                                    <% if (vaga.candidatos.length > 0) { %>
+                                        <span class="badge badge-active">🔥 <%= vaga.candidatos.length %></span>
+                                    <% } else { %>
+                                        <span class="badge">0</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (vaga.preenchida) { %>
+                                        <span class="badge badge-preenchida">✅ Preenchida</span>
+                                    <% } else { %>
+                                        <span class="badge badge-active">🟢 Aberta</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <div class="acoes-vaga">
+                                        <% if (vaga.candidatos.length > 0) { %>
+                                            <a href="/vaga/<%= vaga.id %>/candidatos" class="btn-ver">👁️ Currículos</a>
+                                        <% } %>
+                                        <% if (!vaga.preenchida) { %>
+                                            <form action="/vaga/<%= vaga.id %>/preencher" method="POST" onsubmit="return confirm('Confirmar que a vaga foi preenchida?')">
+                                                <button type="submit" class="btn-preencher">✅ Preenchida</button>
+                                            </form>
+                                        <% } else { %>
+                                            <form action="/vaga/<%= vaga.id %>/excluir" method="POST" onsubmit="return confirm('Excluir esta vaga permanentemente?')">
+                                                <button type="submit" class="btn-excluir">🗑️ Excluir</button>
+                                            </form>
+                                        <% } %>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Cadastro de Candidato</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #218838; }
+        .link { text-align: center; margin-top: 15px; font-size: 12px; }
+        .erro { color: red; text-align: center; font-size: 14px; margin-bottom: 10px; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.ativo { display: flex; }
+        .modal-box { background: white; border-radius: 10px; width: 90%; max-width: 560px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+        .modal-header { padding: 20px 25px 15px; border-bottom: 1px solid #eee; }
+        .modal-header h3 { margin: 0; font-size: 1rem; color: #333; }
+        .modal-body { padding: 20px 25px; overflow-y: auto; flex: 1; font-size: 0.88rem; color: #444; line-height: 1.6; }
+        .modal-body h4 { color: #007bff; margin: 18px 0 6px; font-size: 0.9rem; }
+        .modal-body p, .modal-body ul { margin: 0 0 8px; }
+        .modal-body ul { padding-left: 18px; }
+        .modal-footer { padding: 15px 25px; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 12px; }
+        .modal-footer label { font-size: 0.88rem; color: #333; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .modal-footer label input[type="checkbox"] { width: 16px; height: 16px; margin: 0; }
+        .btn-confirmar { padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 15px; font-weight: bold; transition: 0.2s; }
+        .btn-confirmar:disabled { background: #aaa; cursor: not-allowed; }
+        .btn-confirmar:not(:disabled):hover { background: #218838; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Crie sua Conta</h2>
+
+        <div id="erroTermo" style="display:none; color:#721c24; background:#f8d7da; border:1px solid #f5c6cb; padding:10px; border-radius:5px; font-size:13px; margin-bottom:10px; text-align:center;">
+            Você precisa aceitar o Termo de Consentimento para se cadastrar.
+        </div>
+
+        <% if (typeof erro !== 'undefined') { %>
+            <div class="erro"><%= erro %></div>
+        <% } %>
+
+        <form id="formCadastro" action="/salvar_candidato" method="POST">
+            <input type="text" name="nome" placeholder="Seu Nome Completo" required>
+            <input type="email" name="email" placeholder="Seu E-mail" required>
+            <input type="text" name="cpf" placeholder="Seu CPF" required>
+            <input type="password" name="senha" placeholder="Crie uma Senha" required>
+            <input type="hidden" name="termoAceito" id="termoAceitoInput">
+            <button type="button" onclick="abrirTermo()">Cadastrar</button>
+        </form>
+        <div class="link">
+            Já tem conta? <a href="/login">Fazer Login</a>
+        </div>
+    </div>
+
+    <!-- Modal Termo de Consentimento -->
+    <div class="modal-overlay" id="modalTermo" onclick="fecharSeForaDoBox(event)">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Termo de Consentimento para Tratamento de Dados Pessoais</h3>
+            </div>
+            <div class="modal-body">
+                <h4>1. IDENTIFICAÇÃO</h4>
+                <p>Este termo refere-se ao uso do sistema/aplicativo da Agência do Trabalhador de Barbosa Ferraz-PR, destinado à intermediação de vagas de emprego entre empresas e candidatos.</p>
+
+                <h4>2. DADOS COLETADOS</h4>
+                <p>Ao se cadastrar, o usuário autoriza a coleta e tratamento dos seguintes dados:</p>
+                <ul>
+                    <li>Nome completo</li>
+                    <li>CPF e RG</li>
+                    <li>Data de nascimento</li>
+                    <li>Endereço</li>
+                    <li>Telefone e e-mail</li>
+                    <li>Informações profissionais e currículo</li>
+                    <li>Dados empresariais (no caso de empresas, incluindo CNPJ)</li>
+                </ul>
+
+                <h4>3. FINALIDADE DO USO DOS DADOS</h4>
+                <p>Os dados serão utilizados para:</p>
+                <ul>
+                    <li>Cadastro no sistema de intermediação de emprego</li>
+                    <li>Candidatura a vagas disponibilizadas</li>
+                    <li>Encaminhamento de candidatos às empresas</li>
+                    <li>Cadastro e envio de informações ao Ministério do Trabalho</li>
+                    <li>Geração de relatórios estatísticos e administrativos</li>
+                </ul>
+
+                <h4>4. COMPARTILHAMENTO DE DADOS</h4>
+                <p>Os dados poderão ser compartilhados com:</p>
+                <ul>
+                    <li>Empresas cadastradas no sistema (no caso de candidatos)</li>
+                    <li>Agência do Trabalhador</li>
+                    <li>Ministério do Trabalho e Emprego</li>
+                    <li>Órgãos públicos quando necessário para cumprimento de obrigação legal</li>
+                </ul>
+
+                <h4>5. CONSENTIMENTO</h4>
+                <p>Ao utilizar o sistema, o usuário declara que:</p>
+                <ul>
+                    <li>Está ciente e concorda com a coleta e uso de seus dados</li>
+                    <li>Autoriza o tratamento conforme descrito neste termo</li>
+                    <li>Tem ciência de que pode solicitar exclusão ou alteração dos dados a qualquer momento</li>
+                </ul>
+
+                <h4>6. DIREITOS DO TITULAR DOS DADOS</h4>
+                <p>Nos termos da LGPD, o usuário poderá:</p>
+                <ul>
+                    <li>Solicitar acesso aos seus dados</li>
+                    <li>Corrigir dados incompletos ou incorretos</li>
+                    <li>Solicitar exclusão dos dados</li>
+                    <li>Revogar este consentimento</li>
+                </ul>
+
+                <h4>7. SEGURANÇA DAS INFORMAÇÕES</h4>
+                <p>A Agência do Trabalhador se compromete a adotar medidas técnicas e administrativas para proteger os dados pessoais contra acessos não autorizados e situações acidentais ou ilícitas.</p>
+
+                <h4>8. VIGÊNCIA</h4>
+                <p>Este termo é válido a partir do momento do cadastro e permanecerá enquanto os dados estiverem armazenados no sistema.</p>
+
+                <h4>9. ACEITE</h4>
+                <p>Ao se cadastrar no sistema, o usuário declara que leu e concorda com este Termo de Consentimento.</p>
+            </div>
+            <div class="modal-footer">
+                <label>
+                    <input type="checkbox" id="checkTermo" onchange="toggleBotaoConfirmar()">
+                    Li e concordo com o Termo de Consentimento para Tratamento de Dados Pessoais.
+                </label>
+                <button class="btn-confirmar" id="btnConfirmar" disabled onclick="confirmarTermo()">
+                    Confirmar e Cadastrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verifica query param erro=termo
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('erro') === 'termo') {
+            document.getElementById('erroTermo').style.display = 'block';
+        }
+
+        function abrirTermo() {
+            const form = document.getElementById('formCadastro');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            document.getElementById('checkTermo').checked = false;
+            document.getElementById('btnConfirmar').disabled = true;
+            document.getElementById('modalTermo').classList.add('ativo');
+        }
+
+        function toggleBotaoConfirmar() {
+            const checked = document.getElementById('checkTermo').checked;
+            document.getElementById('btnConfirmar').disabled = !checked;
+        }
+
+        function confirmarTermo() {
+            document.getElementById('termoAceitoInput').value = 'true';
+            document.getElementById('formCadastro').submit();
+        }
+
+        function fecharSeForaDoBox(event) {
+            if (event.target === document.getElementById('modalTermo')) {
+                document.getElementById('modalTermo').classList.remove('ativo');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Candidatos - <%= vaga.titulo %></title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 40px 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; flex-wrap: wrap; gap: 12px; }
+        h2 { color: #333; margin: 0; font-size: 1.3rem; }
+        .btn-voltar { text-decoration: none; color: #555; background: white; padding: 8px 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); white-space: nowrap; }
+
+        .card-candidato { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 25px; border-left: 5px solid #007bff; }
+
+        .topo-card { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; flex-wrap: wrap; gap: 12px; }
+        .nome { font-size: 1.3rem; font-weight: bold; color: #222; }
+        .contato { color: #666; font-size: 0.9rem; margin-top: 5px; line-height: 1.7; }
+
+        .secao-titulo { font-size: 1rem; font-weight: bold; color: #007bff; margin-top: 20px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .texto-simples { color: #444; line-height: 1.5; background: #f9f9f9; padding: 10px; border-radius: 5px; }
+
+        .item-lista { margin-bottom: 10px; border-left: 3px solid #ddd; padding-left: 10px; }
+        .item-titulo { font-weight: bold; color: #333; }
+        .item-detalhe { color: #666; font-size: 0.9rem; }
+
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag { background: #e9ecef; color: #495057; padding: 5px 10px; border-radius: 20px; font-size: 0.85rem; }
+
+        .btn-email { background: #28a745; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; display: inline-block; font-weight: bold; white-space: nowrap; }
+        .btn-email:hover { background: #218838; }
+
+        @media (max-width: 600px) {
+            body { padding: 15px 12px; }
+            .card-candidato { padding: 16px; }
+            .nome { font-size: 1.1rem; }
+            .btn-email { width: 100%; text-align: center; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-top">
+            <div>
+                <h2>Candidatos para: <%= vaga.titulo %></h2>
+                <p style="color: #666;">Total de interessados: <strong><%= vaga.candidatos.length %></strong></p>
+            </div>
+            <a href="/painel_empresa" class="btn-voltar">⬅ Voltar</a>
+        </div>
+
+        <% if (vaga.candidatos.length === 0) { %>
+            <div style="text-align: center; padding: 50px; color: #888; background: white; border-radius: 10px;">
+                <h3>Ainda não há candidatos para esta vaga.</h3>
+                <p>Aguarde um pouco mais! ⏳</p>
+            </div>
+        <% } else { %>
+            
+            <% vaga.candidatos.forEach(candidato => { %>
+                <div class="card-candidato">
+                    <div class="topo-card">
+                        <div>
+                            <div class="nome"><%= candidato.nome %></div>
+                            <div class="contato">
+                                📧 <%= candidato.email %> <br>
+                                📞 <%= candidato.telefone || 'Não informado' %> <br>
+                                🎂 <%= candidato.nascimento || 'Não informado' %>
+                            </div>
+                        </div>
+                        <a href="mailto:<%= candidato.email %>" class="btn-email">Entrar em Contato</a>
+                    </div>
+
+                    <% if(candidato.resumo) { %>
+                        <div class="secao-titulo">Resumo Profissional</div>
+                        <div class="texto-simples"><%= candidato.resumo %></div>
+                    <% } %>
+
+                    <% if(candidato.formacao) { %>
+                        <div class="secao-titulo">Formação Acadêmica</div>
+                        <% 
+                            let formacoes = [];
+                            try { formacoes = JSON.parse(candidato.formacao); } catch(e) { }
+                        %>
+                        <% formacoes.forEach(f => { %>
+                            <div class="item-lista">
+                                <div class="item-titulo"><%= f.curso %> - <%= f.nivel %></div>
+                                <div class="item-detalhe"><%= f.status %> - Previsão: <%= f.data %></div>
+                            </div>
+                        <% }) %>
+                    <% } %>
+
+                    <% if(candidato.experiencia) { %>
+                        <div class="secao-titulo">Experiência Profissional</div>
+                        <% 
+                            let experiencias = [];
+                            try { experiencias = JSON.parse(candidato.experiencia); } catch(e) { }
+                        %>
+                        <% experiencias.forEach(xp => { %>
+                            <div class="item-lista">
+                                <div class="item-titulo"><%= xp.cargo %> na <%= xp.empresa %></div>
+                                <div class="item-detalhe"><%= xp.inicio %> até <%= xp.fim || 'Atualmente' %></div>
+                                <div style="margin-top: 5px; font-style: italic; color: #555;"><%= xp.descricao %></div>
+                            </div>
+                        <% }) %>
+                    <% } %>
+
+                    <% if(candidato.habilidades) { %>
+                        <div class="secao-titulo">Habilidades</div>
+                        <div class="tags">
+                            <% 
+                                let skills = [];
+                                try { skills = JSON.parse(candidato.habilidades); } catch(e) { }
+                            %>
+                            <% skills.forEach(skill => { %>
+                                <span class="tag"><%= skill %></span>
+                            <% }) %>
+                        </div>
+                    <% } %>
+
+                </div>
+            <% }) %>
+
+        <% } %>
+    </div>
+
+</body>
+</html>

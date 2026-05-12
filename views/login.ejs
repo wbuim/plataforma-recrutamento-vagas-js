@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Login - W-Code Vagas</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; border-top: 5px solid #007bff; }
+        
+        .logo-area { margin-bottom: 25px; }
+        .logo-area h1 { margin: 0; color: #333; font-size: 1.8rem; }
+        .logo-area span { color: #007bff; font-weight: bold; }
+
+        h2 { color: #555; font-size: 1.1rem; margin-bottom: 25px; font-weight: 400; }
+        
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 14px; transition: border-color 0.3s; }
+        input:focus, select:focus { outline: none; border-color: #007bff; }
+        
+        button { width: 100%; padding: 14px; background: #007bff; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; margin-top: 15px; }
+        button:hover { background: #0056b3; }
+        
+        .erro { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; }
+        
+        .links { margin-top: 25px; font-size: 0.85rem; color: #666; }
+        .links a { color: #007bff; text-decoration: none; font-weight: 600; }
+        .links a:hover { text-decoration: underline; }
+        
+        .divider { border-top: 1px solid #eee; margin: 20px 0; position: relative; }
+        .divider::after { content: "ou"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: white; padding: 0 10px; color: #999; }
+        
+        .footer-text { margin-top: 10px; display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="logo-area">
+            <h1>W-<span>Code</span> Vagas</h1>
+        </div>
+
+        <h2>🔐 Acesse sua conta para continuar</h2>
+
+        <% if (typeof erro !== 'undefined' && erro) { %>
+            <div class="erro">⚠️ <%= erro %></div>
+        <% } %>
+
+        <form action="/logar" method="POST">
+            <input type="email" name="email" placeholder="E-mail cadastrado" required>
+            <input type="password" name="senha" placeholder="Sua senha" required>
+            
+            <select name="tipoUsuario" required>
+                <option value="" disabled selected>Selecione seu perfil...</option>
+                <option value="candidato">👤 Sou Candidato</option>
+                <option value="empresa">🏢 Sou Empresa</option>
+                <option value="admin">🔑 Sou Administrador</option>
+            </select>
+            
+            <button type="submit">Entrar no Sistema</button>
+        </form>
+
+        <div class="links">
+            <a href="/esqueci_senha">Esqueci minha senha</a>
+            <div class="divider"></div>
+            <span class="footer-text">Não tem uma conta ainda?</span>
+            <div style="margin-top: 10px;">
+                <a href="/cadastro">Cadastrar como Candidato</a> | 
+                <a href="/cadastro_empresa">Área da Empresa</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

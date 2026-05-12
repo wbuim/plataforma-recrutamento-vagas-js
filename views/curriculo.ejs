@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Editar Currículo - W-Code</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; box-sizing: border-box; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
+        h2 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; }
+        h3 { color: #555; margin-top: 30px; margin-bottom: 15px; border-left: 4px solid #28a745; padding-left: 10px; }
+
+        label { display: block; margin-top: 10px; font-weight: 600; color: #444; font-size: 0.9rem; }
+        input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
+
+        .item-card { background: #f8f9fa; border: 1px solid #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 10px; position: relative; }
+        .btn-remove { position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; border: none; width: 25px; height: 25px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+
+        .btn-add { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; margin-top: 5px; }
+        .btn-add:hover { background: #0056b3; }
+
+        .btn-salvar { display: block; width: 100%; background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-size: 18px; cursor: pointer; margin-top: 40px; font-weight: bold; transition: 0.3s; }
+        .btn-salvar:hover { background: #218838; transform: scale(1.02); }
+
+        .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+        .skill-option { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.9rem; }
+        .skill-option:hover { background: #e2e6ea; border-color: #adb5bd; }
+        .skill-option input { width: auto; margin: 0; }
+
+        .row { display: flex; gap: 15px; }
+        .col { flex: 1; min-width: 0; }
+
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .container { padding: 20px 15px; }
+            .row { flex-direction: column; gap: 0; }
+            .skills-grid { grid-template-columns: 1fr 1fr; }
+            h2 { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>✏️ Editar Meu Currículo</h2>
+
+    <form id="formCurriculo" action="/salvar_curriculo" method="POST">
+        
+        <div class="row">
+            <div class="col">
+                <label>Nome Completo</label>
+                <input type="text" value="<%= candidato.nome %>" disabled style="background: #e9ecef; color: #555;">
+            </div>
+            <div class="col">
+                <label>Data de Nascimento</label>
+                <input type="date" name="nascimento" value="<%= candidato.nascimento || '' %>">
+            </div>
+        </div>
+
+        <label>Telefone / WhatsApp</label>
+        <input type="text" name="telefone" value="<%= candidato.telefone || '' %>" placeholder="(XX) 99999-9999">
+
+        <label>Resumo Profissional</label>
+        <textarea name="resumo" rows="3" placeholder="Fale um pouco sobre você, suas qualidades e o que busca..."><%= candidato.resumo || '' %></textarea>
+
+        <h3>🎓 Formação Acadêmica</h3>
+        <div id="lista-formacao"></div>
+        <button type="button" class="btn-add" onclick="addFormacao()">+ Adicionar Formação</button>
+        <input type="hidden" name="formacaoJSON" id="formacaoJSON">
+
+        <h3>💼 Experiência Profissional</h3>
+        <div id="lista-experiencia"></div>
+        <button type="button" class="btn-add" onclick="addExperiencia()">+ Adicionar Experiência</button>
+        <input type="hidden" name="experienciaJSON" id="experienciaJSON">
+
+        <h3>🚀 Habilidades e Qualidades (Selecione até 5)</h3>
+        <div class="skills-grid">
+            <% 
+            // LISTA ATUALIZADA PARA COMÉRCIO/LOCAL
+            const skillsList = [
+                'Atendimento ao Cliente', 
+                'Vendas / Negociação', 
+                'Operador de Caixa', 
+                'Reposição de Estoque', 
+                'Trabalho em Equipe', 
+                'Pontualidade', 
+                'Boa Comunicação', 
+                'Proatividade', 
+                'Organização', 
+                'Limpeza e Zeladoria', 
+                'Informática Básica', 
+                'Pacote Office (Word/Excel)', 
+                'Carteira de Motorista (CNH)', 
+                'Disponibilidade de Horário', 
+                'Facilidade em Aprender'
+            ];
+
+            // Tenta ler as habilidades salvas
+            let minhasSkills = [];
+            if(candidato.habilidades) {
+                try { minhasSkills = JSON.parse(candidato.habilidades); } catch(e) { minhasSkills = [candidato.habilidades]; }
+            }
+            %>
+            
+            <% skillsList.forEach(skill => { %>
+                <label class="skill-option">
+                    <input type="checkbox" name="habilidades" value="<%= skill %>" 
+                        <%= minhasSkills.includes(skill) ? 'checked' : '' %> 
+                        onchange="checkLimit(this)">
+                    <%= skill %>
+                </label>
+            <% }) %>
+        </div>
+
+        <button type="submit" class="btn-salvar" onclick="prepararEnvio()">Salvar Currículo</button>
+    </form>
+    
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="/mural" style="color: #666; text-decoration: none;">Cancelar e Voltar</a>
+    </div>
+
+</div>
+
+<script>
+    // --- LÓGICA DE FORMAÇÃO ---
+    const formacoesSalvas = <%- candidato.formacao && candidato.formacao.startsWith('[') ? candidato.formacao : '[]' %>;
+    const experienciasSalvas = <%- candidato.experiencia && candidato.experiencia.startsWith('[') ? candidato.experiencia : '[]' %>;
+
+    window.onload = function() {
+        if(formacoesSalvas.length > 0) formacoesSalvas.forEach(dado => addFormacao(dado));
+        else addFormacao(); // Adiciona um vazio se não tiver nada
+
+        if(experienciasSalvas.length > 0) experienciasSalvas.forEach(dado => addExperiencia(dado));
+        else addExperiencia(); // Adiciona um vazio se não tiver nada
+    };
+
+    function addFormacao(dados = {}) {
+        const div = document.createElement('div');
+        div.className = 'item-card';
+        div.innerHTML = `
+            <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+            <div class="row">
+                <div class="col">
+                    <label>Nível</label>
+                    <select class="input-nivel">
+                        <option value="Ensino Fundamental" ${dados.nivel === 'Ensino Fundamental' ? 'selected' : ''}>Ensino Fundamental</option>
+                        <option value="Ensino Médio" ${dados.nivel === 'Ensino Médio' ? 'selected' : ''}>Ensino Médio</option>
+                        <option value="Técnico" ${dados.nivel === 'Técnico' ? 'selected' : ''}>Técnico</option>
+                        <option value="Superior" ${dados.nivel === 'Superior' ? 'selected' : ''}>Ensino Superior</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label>Status</label>
+                    <select class="input-status" onchange="toggleConclusao(this)">
+                        <option value="Concluído" ${dados.status === 'Concluído' ? 'selected' : ''}>Concluído</option>
+                        <option value="Em Andamento" ${dados.status === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option>
+                        <option value="Incompleto" ${dados.status === 'Incompleto' ? 'selected' : ''}>Incompleto</option>
+                    </select>
+                </div>
+            </div>
+            <label>Nome da Escola / Instituição</label>
+            <input type="text" class="input-curso" value="${dados.curso || ''}" placeholder="Ex: Colégio Dom Bosco">
+            
+            <div class="div-previa" style="display: ${dados.status === 'Em Andamento' ? 'block' : 'none'};">
+                <label>Previsão de Conclusão</label>
+                <input type="month" class="input-data" value="${dados.data || ''}">
+            </div>
+        `;
+        document.getElementById('lista-formacao').appendChild(div);
+    }
+
+    function toggleConclusao(select) {
+        const divPrevia = select.parentElement.parentElement.parentElement.querySelector('.div-previa');
+        if (select.value === 'Em Andamento') divPrevia.style.display = 'block';
+        else divPrevia.style.display = 'none';
+    }
+
+    // --- LÓGICA DE EXPERIÊNCIA ---
+    function addExperiencia(dados = {}) {
+        const div = document.createElement('div');
+        div.className = 'item-card';
+        div.innerHTML = `
+            <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+            <div class="row">
+                <div class="col"><label>Cargo</label><input type="text" class="xp-cargo" value="${dados.cargo || ''}" placeholder="Ex: Vendedor, Caixa..."></div>
+                <div class="col"><label>Empresa</label><input type="text" class="xp-empresa" value="${dados.empresa || ''}"></div>
+            </div>
+            <div class="row">
+                <div class="col"><label>Início</label><input type="month" class="xp-inicio" value="${dados.inicio || ''}"></div>
+                <div class="col"><label>Fim (Deixe vazio se atual)</label><input type="month" class="xp-fim" value="${dados.fim || ''}"></div>
+            </div>
+            <label>O que você fazia lá? (Principais atividades)</label>
+            <textarea class="xp-desc" rows="2">${dados.descricao || ''}</textarea>
+        `;
+        document.getElementById('lista-experiencia').appendChild(div);
+    }
+
+    // --- LIMITE DE SKILLS ---
+    function checkLimit(checkbox) {
+        const checked = document.querySelectorAll('input[name="habilidades"]:checked');
+        if (checked.length > 5) {
+            checkbox.checked = false;
+            alert("Por favor, selecione no máximo 5 habilidades principais.");
+        }
+    }
+
+    // --- PREPARAR PARA SALVAR (Empacota tudo em JSON) ---
+    function prepararEnvio() {
+        const formacoes = [];
+        document.querySelectorAll('#lista-formacao .item-card').forEach(item => {
+            // Só salva se tiver algo escrito
+            if(item.querySelector('.input-curso').value !== "") {
+                formacoes.push({
+                    nivel: item.querySelector('.input-nivel').value,
+                    status: item.querySelector('.input-status').value,
+                    curso: item.querySelector('.input-curso').value,
+                    data: item.querySelector('.input-data').value
+                });
+            }
+        });
+        document.getElementById('formacaoJSON').value = JSON.stringify(formacoes);
+
+        const experiencias = [];
+        document.querySelectorAll('#lista-experiencia .item-card').forEach(item => {
+            // Só salva se tiver algo escrito
+            if(item.querySelector('.xp-cargo').value !== "") {
+                experiencias.push({
+                    cargo: item.querySelector('.xp-cargo').value,
+                    empresa: item.querySelector('.xp-empresa').value,
+                    inicio: item.querySelector('.xp-inicio').value,
+                    fim: item.querySelector('.xp-fim').value,
+                    descricao: item.querySelector('.xp-desc').value
+                });
+            }
+        });
+        document.getElementById('experienciaJSON').value = JSON.stringify(experiencias);
+    }
+</script>
+
+</body>
+</html>
