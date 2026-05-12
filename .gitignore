@@ -52,3 +52,8 @@ logs/
 Thumbs.db
 .vscode/
 .idea/
+
+# Permite screenshots públicos do README
+!docs/
+!docs/screenshots/
+!docs/screenshots/.gitkeep
